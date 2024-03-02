@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@vliegwerk/arduino-nano-33-ble": "^1.0.1",
+    "events": "^3.3.0",
+    "util": "^0.12.5",
+    "ws": "^8.16.0"
+  }
+}
