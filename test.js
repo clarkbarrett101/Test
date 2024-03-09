@@ -114,7 +114,7 @@ function draw() {
 
   score = Math.log2(accelMag) * 2000;
   if (score >= 0) {
-    bufferedScore = (bufferedScore * 2 + score) / 3;
+    bufferedScore += (score - bufferedScore) / 10;
   }
   const colorlvl = Math.abs(bufferedScore - 100);
   console.log(battery);
