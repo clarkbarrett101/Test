@@ -112,7 +112,7 @@ function draw() {
   );
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  score = Math.log2(accelMag) * 2000;
+  score = Math.max(canvas.height, Math.log2(accelMag) * 2000);
   if (score >= 0) {
     bufferedScore += (score - bufferedScore) / 5;
   }
