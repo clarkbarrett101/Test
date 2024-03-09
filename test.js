@@ -1,20 +1,22 @@
 const element = document.body;
 const canvas = document.createElement("canvas");
-canvas.width = 500;
-canvas.height = 500;
+canvas.width = 100;
+canvas.height = 300;
 element.appendChild(canvas);
 const ctx = canvas.getContext("2d");
 //BLE
 let service = "590d65c7-3a0a-4023-a05a-6aaf2f22441c";
-let characteristics = [0x0001, 0x0002, 0x0003];
+let characteristics = [0x0004, 0x0005, 0x0006];
 let byteLength = 8;
 let connected = false;
-let gyro = [180.0, 180.0, 180.0];
+let gyro = [0.0, 0.0, 0.0];
+let gOffset = [0.0, 0.0, 0.0];
+let accel = [0.0, 0.0, 0.0];
+let aOffset = [0.0, 0.0, 0.0];
+let battery = 0.0;
 
-window.onload = () => {
-  element.onclick = connectBLE;
-  setInterval(draw, 100);
-};
+setInterval(draw, 50);
+
 function gyroXChanged(event) {
   var value = event.target.value;
   var str = "";
@@ -39,43 +41,84 @@ function gyroZChanged(event) {
   }
   gyro[2] = parseFloat(str);
 }
-const functions = [gyroXChanged, gyroYChanged, gyroZChanged];
-function connectBLE() {
-  navigator.bluetooth
-    .requestDevice({ filters: [{ services: [service] }] })
-    .then((device) => device.gatt.connect())
-    .then((server) => server.getPrimaryService(service))
-    .then((service) => {
-      for (let i = 0; i < characteristics.length; i++) {
-        service.getCharacteristic(characteristics[i]).then((characteristic) => {
-          console.log(characteristic);
-          characteristic.startNotifications().then((_) => {
-            characteristic.addEventListener(
-              "characteristicvaluechanged",
-              functions[i]
-            );
-          });
-        });
-      }
-    })
-    .then((connected = true));
+function accelXChanged(event) {
+  var value = event.target.value;
+  var str = "";
+  for (var i = 0; i < value.byteLength; i++) {
+    str += String.fromCharCode(value.getUint8(i));
+  }
+  accel[0] = parseFloat(str);
 }
+function accelYChanged(event) {
+  var value = event.target.value;
+  var str = "";
+  for (var i = 0; i < value.byteLength; i++) {
+    str += String.fromCharCode(value.getUint8(i));
+  }
+  accel[1] = parseFloat(str);
+}
+function accelZChanged(event) {
+  var value = event.target.value;
+  var str = "";
+  for (var i = 0; i < value.byteLength; i++) {
+    str += String.fromCharCode(value.getUint8(i));
+  }
+  accel[2] = parseFloat(str);
+}
+function batteryChanged(event) {
+  var value = event.target.value;
+  var str = "";
+  for (var i = 0; i < value.byteLength; i++) {
+    str += String.fromCharCode(value.getUint8(i));
+  }
+  battery = parseFloat(str);
+}
+
+const functions = [accelXChanged, accelYChanged, accelZChanged];
+function connectBLE() {
+  try {
+    navigator.bluetooth
+      .requestDevice({ filters: [{ services: [service] }] })
+      .then((device) => device.gatt.connect())
+      .then((server) => server.getPrimaryService(service))
+      .then((service) => {
+        for (let i = 0; i < characteristics.length; i++) {
+          service
+            .getCharacteristic(characteristics[i])
+            .then((characteristic) => {
+              console.log(characteristic);
+              characteristic.startNotifications().then((_) => {
+                characteristic.addEventListener(
+                  "characteristicvaluechanged",
+                  functions[i]
+                );
+              });
+            });
+        }
+      })
+      .then((connected = true));
+  } catch (e) {
+    window.alert("Connection failed. Please try again.");
+  }
+}
+
+const node = document.body.appendChild(document.createElement("div"));
+let max = 0;
+let score = 0;
+let bufferedScore = 0;
 function draw() {
+  const accelMag = Math.sqrt(
+    accel[0] * accel[0] + accel[1] * accel[1] + accel[2] * accel[2]
+  );
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.beginPath();
-  ctx.moveTo(canvas.width / 2, 0);
-  ctx.lineTo(canvas.width / 2, canvas.height);
-  ctx.stroke();
-  ctx.fillStyle = "red";
-  ctx.beginPath();
-  ctx.fillRect(canvas.width / 2, 10, gyro[0], 40);
-  ctx.stroke();
-  ctx.fillStyle = "green";
-  ctx.beginPath();
-  ctx.fillRect(canvas.width / 2, 60, gyro[1], 40);
-  ctx.stroke();
-  ctx.fillStyle = "blue";
-  ctx.beginPath();
-  ctx.fillRect(canvas.width / 2, 110, gyro[2], 40);
-  ctx.stroke();
+  ctx.strokeRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeRect(0, 50, canvas.width, canvas.height - 100);
+  score = Math.log2(accelMag) * 2000;
+  if (score >= 0) {
+    bufferedScore = (bufferedScore * 2 + score) / 3;
+  }
+  const colorlvl = Math.abs(bufferedScore - 100);
+  console.log(battery);
+  ctx.fillStyle = "rgb(" + colorlvl + "," + (255 - colorlvl) + ", 0)";
+  ctx.fillRect(0, canvas.height - bufferedScore, canvas.width, bufferedScore);
 }
