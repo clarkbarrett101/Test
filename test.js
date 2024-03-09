@@ -111,8 +111,7 @@ function draw() {
     accel[0] * accel[0] + accel[1] * accel[1] + accel[2] * accel[2]
   );
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.strokeRect(0, 0, canvas.width, canvas.height);
-  ctx.strokeRect(0, 50, canvas.width, canvas.height - 100);
+
   score = Math.log2(accelMag) * 2000;
   if (score >= 0) {
     bufferedScore = (bufferedScore * 2 + score) / 3;
@@ -121,4 +120,7 @@ function draw() {
   console.log(battery);
   ctx.fillStyle = "rgb(" + colorlvl + "," + (255 - colorlvl) + ", 0)";
   ctx.fillRect(0, canvas.height - bufferedScore, canvas.width, bufferedScore);
+  ctx.strokeRect(0, 0, canvas.width, canvas.height);
+  ctx.strokeRect(0, 50, canvas.width, canvas.height - 100);
+  ctx.strokeRect(0, 100, canvas.width, canvas.height - 200);
 }
