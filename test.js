@@ -15,6 +15,7 @@ let accel = [0.0, 0.0, 0.0];
 let aOffset = [0.0, 0.0, 0.0];
 let battery = 0.0;
 
+//BLE
 setInterval(draw, 50);
 
 function gyroXChanged(event) {
